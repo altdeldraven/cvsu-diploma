@@ -1,0 +1,89 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Cinzel:wght@400;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* CvSU Green Theme - #008001 */
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-serif: 'Playfair Display', Georgia, serif;
+  --font-display: 'Cinzel', serif;
+
+  --background: 120 10% 98%;
+  --foreground: 120 30% 10%;
+
+  --primary: 120 100% 25%;      /* CvSU Green #008001 */
+  --primary-foreground: 0 0% 100%;
+
+  --secondary: 120 20% 95%;
+  --secondary-foreground: 120 30% 10%;
+
+  --muted: 120 10% 96%;
+  --muted-foreground: 120 5% 45%;
+
+  --accent: 45 93% 47%;        /* Gold for Seals/Awards */
+  --accent-foreground: 120 30% 10%;
+
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 100%;
+
+  --card: 0 0% 100%;
+  --card-foreground: 120 30% 10%;
+
+  --popover: 0 0% 100%;
+  --popover-foreground: 120 30% 10%;
+
+  --border: 120 10% 90%;
+  --input: 120 10% 90%;
+  --ring: 120 100% 25%;
+
+  --radius: 0.5rem;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: var(--font-sans);
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-serif);
+    @apply font-bold tracking-tight text-primary;
+  }
+  
+  /* Custom scrollbar for refined feel */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-muted-foreground/20 rounded-full;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-muted-foreground/40;
+  }
+}
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+/* Diploma Specific Styles */
+.diploma-border {
+  border: 8px solid hsl(var(--primary));
+  position: relative;
+  background-image: 
+    radial-gradient(circle at center, transparent 0%, rgba(255,255,255,0.8) 100%),
+    url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%239C92AC' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+
+.diploma-seal {
+  background: linear-gradient(135deg, hsl(45, 93%, 47%), hsl(35, 80%, 40%));
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}

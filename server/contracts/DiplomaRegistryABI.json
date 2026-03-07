@@ -1,0 +1,60 @@
+[
+  {
+    "inputs": [],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      { "indexed": false, "internalType": "string", "name": "certificateId", "type": "string" },
+      { "indexed": false, "internalType": "bytes32", "name": "diplomaHash", "type": "bytes32" },
+      { "indexed": false, "internalType": "uint256", "name": "timestamp", "type": "uint256" }
+    ],
+    "name": "DiplomaRegistered",
+    "type": "event"
+  },
+  {
+    "inputs": [
+      { "internalType": "string", "name": "certificateId", "type": "string" },
+      { "internalType": "bytes32", "name": "diplomaHash", "type": "bytes32" }
+    ],
+    "name": "registerDiploma",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "string", "name": "certificateId", "type": "string" }
+    ],
+    "name": "verifyDiploma",
+    "outputs": [
+      { "internalType": "bytes32", "name": "hash", "type": "bytes32" },
+      { "internalType": "uint256", "name": "timestamp", "type": "uint256" },
+      { "internalType": "bool", "name": "exists", "type": "bool" }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "string", "name": "certificateId", "type": "string" }
+    ],
+    "name": "isDiplomaRegistered",
+    "outputs": [
+      { "internalType": "bool", "name": "", "type": "bool" }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "owner",
+    "outputs": [
+      { "internalType": "address", "name": "", "type": "address" }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  }
+]
