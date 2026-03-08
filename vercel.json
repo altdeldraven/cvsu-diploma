@@ -3,8 +3,7 @@
   "builds": [
     {
       "src": "package.json",
-      "use": "@vercel/node",
-      "config": { "zeroConfig": true }
+      "use": "@vercel/node"
     }
   ],
   "routes": [
@@ -12,6 +11,5 @@
       "src": "/(.*)",
       "dest": "/dist/index.cjs"
     }
-  ],
-  "rewrites": [{ "source": "/(.*)", "destination": "/" }]
+  ]
 }

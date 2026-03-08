@@ -92,7 +92,12 @@ app.use((req, res, next) => {
   // It is the only port that is not firewalled.
   const port = parseInt(process.env.PORT || "5000", 10);
   // note: on Windows reusePort/advanced options can trigger ENOTSUP; keep it simple
-  httpServer.listen(port, "0.0.0.0", () => {
-    log(`serving on port ${port}`);
-  });
+  if (process.env.NODE_ENV !== "production") {
+    httpServer.listen(port, "0.0.0.0", () => {
+      log(`serving on port ${port}`);
+    });
+  }
 })();
+
+// Export for Vercel
+export default app;
