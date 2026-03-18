@@ -4,7 +4,7 @@ import { fileURLToPath, pathToFileURL } from "url";
 import serverless from "serverless-http";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const projectRoot = path.resolve(__dirname, "..", "..");
+const projectRoot = path.resolve(__dirname, "..");
 
 async function loadApp() {
   const distAppPath = path.join(projectRoot, "dist", "index.cjs");
