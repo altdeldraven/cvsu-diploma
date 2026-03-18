@@ -7,13 +7,9 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const projectRoot = path.resolve(__dirname, "..");
 
 async function loadApp() {
-    console.log("API __dirname:", __dirname);
-console.log("projectRoot:", projectRoot);
   const distAppPath = path.join(projectRoot, "dist", "index.cjs");
   if (fs.existsSync(distAppPath)) {
     const distModule = await import(pathToFileURL(distAppPath).href);
-    
-console.log("distAppPath:", distAppPath);
     return {
       app: distModule.default,
       ready: Promise.resolve(),
@@ -23,8 +19,6 @@ console.log("distAppPath:", distAppPath);
   const sourceServerPath = path.join(projectRoot, "server", "index.ts");
   if (fs.existsSync(sourceServerPath)) {
     const sourceModule = await import(pathToFileURL(sourceServerPath).href);
-    
-console.log("sourceServerPath:", sourceServerPath);
     return {
       app: sourceModule.default,
       ready: sourceModule.appReady,

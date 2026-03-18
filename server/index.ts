@@ -76,6 +76,11 @@ async function initializeApplication() {
     return res.status(status).json({ message });
   });
 
+  if (process.env.VERCEL) {
+    // Vercel handles static assets via routes and static-build, so API function should not serve static content.
+    return;
+  }
+
   if (process.env.NODE_ENV === "production") {
     serveStatic(app);
   } else {
