@@ -1,8 +1,7 @@
-import { AppUser as User, InsertUser, Diploma, InsertDiploma, DiplomaSettings, InsertDiplomaSettings } from "@shared/schema";
-import { supabase, pool } from "./db";
 import session from "express-session";
+import { AppUser as User, InsertUser, Diploma, InsertDiploma, DiplomaSettings, InsertDiplomaSettings } from "@shared/schema";
+import { prisma, pool } from "./db";
 import connectPg from "connect-pg-simple";
-import { createClient } from '@supabase/supabase-js';
 
 const PostgresSessionStore = connectPg(session);
 
@@ -14,18 +13,14 @@ export interface IStorage {
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: number, user: Partial<InsertUser>): Promise<User>;
   deleteUser(id: number): Promise<void>;
-  
-  // Diplomas
   getDiplomas(): Promise<(Diploma & { student?: User })[]>;
   getDiploma(id: number): Promise<(Diploma & { student?: User }) | undefined>;
   getDiplomasByStudent(studentId: number): Promise<Diploma[]>;
   getDiplomaByCertificateId(certId: string): Promise<(Diploma & { student?: User }) | undefined>;
   createDiploma(diploma: InsertDiploma): Promise<Diploma>;
   updateDiploma(id: number, diploma: Partial<InsertDiploma>): Promise<Diploma>;
-  // Diploma Settings
   getDiplomaSettings(): Promise<DiplomaSettings | undefined>;
   updateDiplomaSettings(settings: InsertDiplomaSettings): Promise<DiplomaSettings>;
-
   sessionStore: session.Store;
 }
 
@@ -39,156 +34,126 @@ export class DatabaseStorage implements IStorage {
     });
   }
 
-  // quick utility: convert camelCase object keys to snake_case recursively
-  private toSnake(obj: any): any {
-    if (Array.isArray(obj)) return obj.map((v) => this.toSnake(v));
-    if (obj instanceof Date) return obj.toISOString();
-    if (obj && typeof obj === 'object') {
-      return Object.fromEntries(
-        Object.entries(obj).map(([k, v]) => {
-          const snake = k.replace(/([A-Z])/g, '_$1').toLowerCase();
-          return [snake, this.toSnake(v)];
-        }),
-      );
-    }
-    return obj;
+  private toAppUser(user: any): User {
+    return {
+      ...user,
+      role: user.role as "admin" | "student",
+      createdAt: user.createdAt instanceof Date ? user.createdAt.toISOString() : user.createdAt,
+    };
   }
 
-  // convert snake_case keys returned from DB to camelCase recursively
-  private toCamel(obj: any): any {
-    if (Array.isArray(obj)) return obj.map((v) => this.toCamel(v));
-    if (obj instanceof Date) return obj;
-    if (obj && typeof obj === 'object') {
-      return Object.fromEntries(
-        Object.entries(obj).map(([k, v]) => {
-          const camel = k.replace(/_([a-z])/g, (_, c) => c.toUpperCase());
-          return [camel, this.toCamel(v)];
-        }),
-      );
-    }
-    return obj;
+  private toDiploma(diploma: any): Diploma {
+    return {
+      ...diploma,
+      issueDate: diploma.issueDate instanceof Date ? diploma.issueDate.toISOString() : diploma.issueDate,
+      createdAt: diploma.createdAt instanceof Date ? diploma.createdAt.toISOString() : diploma.createdAt,
+    };
   }
 
   async getUser(id: number): Promise<User | undefined> {
-    const { data, error } = await supabase.from('users').select('*').eq('id', id).single();
-    if (error || !data) return undefined;
-    return this.toCamel(data);
+    const user = await prisma.user.findUnique({ where: { id } });
+    return user ? this.toAppUser(user) : undefined;
   }
 
   async getUsers(): Promise<User[]> {
-    const { data, error } = await supabase.from('users').select('*');
-    if (error) throw error;
-    return this.toCamel(data || []);
+    const users = await prisma.user.findMany();
+    return users.map((u) => this.toAppUser(u));
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    const { data, error } = await supabase.from('users').select('*').eq('username', username).single();
-    if (error || !data) return undefined;
-    return this.toCamel(data);
+    const user = await prisma.user.findUnique({ where: { username } });
+    return user ? this.toAppUser(user) : undefined;
   }
 
   async getUserByEmail(email: string): Promise<User | undefined> {
-    const { data, error } = await supabase.from('users').select('*').eq('email', email).single();
-    if (error || !data) return undefined;
-    return this.toCamel(data);
+    const user = await prisma.user.findUnique({ where: { email } });
+    return user ? this.toAppUser(user) : undefined;
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const snake = this.toSnake(insertUser);
-    console.debug("[storage] inserting user", snake);
-    const { data, error } = await supabase.from('users').insert(snake).select().single();
-    if (error) throw error;
-    return this.toCamel(data);
+    const user = await prisma.user.create({ data: insertUser });
+    return this.toAppUser(user);
   }
 
   async updateUser(id: number, update: Partial<InsertUser>): Promise<User> {
-    const { data, error } = await supabase.from('users').update(this.toSnake(update)).eq('id', id).select().single();
-    if (error) throw error;
-    return this.toCamel(data);
+    const user = await prisma.user.update({ where: { id }, data: update });
+    return this.toAppUser(user);
   }
 
   async deleteUser(id: number): Promise<void> {
-    const { error } = await supabase.from('users').delete().eq('id', id);
-    if (error) throw error;
+    await prisma.user.delete({ where: { id } });
   }
 
   async getDiplomas(): Promise<(Diploma & { student?: User })[]> {
-    const { data, error } = await supabase
-      .from('diplomas')
-      .select(`
-        *,
-        student:users(*)
-      `);
-    if (error) throw error;
-    return this.toCamel(data || []);
-  
+    const diplomas = await prisma.diploma.findMany({ include: { student: true } });
+    return diplomas.map((d) => ({
+      ...this.toDiploma(d),
+      student: d.student ? this.toAppUser(d.student) : undefined,
+    }));
   }
 
   async getDiploma(id: number): Promise<(Diploma & { student?: User }) | undefined> {
-    const { data, error } = await supabase
-      .from('diplomas')
-      .select(`
-        *,
-        student:users(*)
-      `)
-      .eq('id', id)
-      .single();
-    if (error || !data) return undefined;
-    return this.toCamel(data);
-  
+    const diploma = await prisma.diploma.findUnique({ where: { id }, include: { student: true } });
+    if (!diploma) return undefined;
+    return {
+      ...this.toDiploma(diploma),
+      student: diploma.student ? this.toAppUser(diploma.student) : undefined,
+    };
   }
 
   async getDiplomasByStudent(studentId: number): Promise<Diploma[]> {
-    const { data, error } = await supabase.from('diplomas').select('*').eq('student_id', studentId);
-    if (error) throw error;
-    return this.toCamel(data || []);
-  
+    const diplomas = await prisma.diploma.findMany({ where: { studentId } });
+    return diplomas.map((d) => this.toDiploma(d));
   }
 
   async getDiplomaByCertificateId(certId: string): Promise<(Diploma & { student?: User }) | undefined> {
-    const { data, error } = await supabase
-      .from('diplomas')
-      .select(`
-        *,
-        student:users(*)
-      `)
-      .eq('certificate_id', certId)
-      .single();
-    if (error || !data) return undefined;
-    return this.toCamel(data);
-  
+    const diploma = await prisma.diploma.findFirst({ where: { certificateId: certId }, include: { student: true } });
+    if (!diploma) return undefined;
+    return {
+      ...this.toDiploma(diploma),
+      student: diploma.student ? this.toAppUser(diploma.student) : undefined,
+    };
   }
 
   async createDiploma(diploma: InsertDiploma): Promise<Diploma> {
-    console.log('Creating diploma with data:', diploma);
-    const snakeData = this.toSnake(diploma);
-    console.log('Snake case data:', snakeData);
-    const { data, error } = await supabase.from('diplomas').insert(snakeData).select().single();
-    if (error) {
-      console.error('Supabase error:', error);
-      throw error;
-    }
-    console.log('Inserted data:', data);
-    return this.toCamel(data);
+    const created = await prisma.diploma.create({
+      data: {
+        ...diploma,
+        issueDate: diploma.issueDate ?? new Date(),
+      },
+    });
+    return this.toDiploma(created);
   }
 
   async updateDiploma(id: number, update: Partial<InsertDiploma>): Promise<Diploma> {
-    const { data, error } = await supabase.from('diplomas').update(this.toSnake(update)).eq('id', id).select().single();
-    if (error) throw error;
-    return this.toCamel(data);
+    const updated = await prisma.diploma.update({ where: { id }, data: update });
+    return this.toDiploma(updated);
   }
 
-  // Diploma Settings
   async getDiplomaSettings(): Promise<DiplomaSettings | undefined> {
-    const { data, error } = await supabase.from('diploma_settings').select('*').single();
-    if (error) return undefined;
-    return data;
+    const settings = await prisma.diplomaSettings.findFirst();
+    if (!settings) return undefined;
+    return {
+      ...settings,
+      updatedAt: settings.updatedAt instanceof Date ? settings.updatedAt.toISOString() : settings.updatedAt,
+    };
   }
 
   async updateDiplomaSettings(settings: InsertDiplomaSettings): Promise<DiplomaSettings> {
-    const { data, error } = await supabase.from('diploma_settings').upsert(this.toSnake(settings)).select().single();
-    if (error) throw error;
-    return this.toCamel(data);
+    // upsert with single row assumption
+    const existing = await prisma.diplomaSettings.findFirst();
+    if (existing) {
+      const updated = await prisma.diplomaSettings.update({ where: { id: existing.id }, data: settings });
+      return {
+        ...updated,
+        updatedAt: updated.updatedAt instanceof Date ? updated.updatedAt.toISOString() : updated.updatedAt,
+      };
+    }
+    const created = await prisma.diplomaSettings.create({ data: settings });
+    return {
+      ...created,
+      updatedAt: created.updatedAt instanceof Date ? created.updatedAt.toISOString() : created.updatedAt,
+    };
   }
 }
 

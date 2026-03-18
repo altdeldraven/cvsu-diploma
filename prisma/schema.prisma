@@ -1,0 +1,47 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id             Int       @id @default(autoincrement())
+  username       String    @unique
+  password       String
+  role           String
+  firstName      String?   @db.VarChar(191)
+  lastName       String?   @db.VarChar(191)
+  email          String?   @unique
+  studentId      String?   @db.VarChar(191)
+  address        String?
+  program        String?   @db.VarChar(191)
+  sex            String?   @db.VarChar(50)
+  latinHonor     String?   @db.VarChar(191)
+  graduationYear Int?
+  isApproved     Boolean   @default(false)
+  createdAt      DateTime  @default(now())
+  diplomas       Diploma[]
+}
+
+model Diploma {
+  id            Int      @id @default(autoincrement())
+  studentId     Int
+  course        String
+  issueDate     DateTime
+  grade         String?
+  status        String   @default("pending_clearance")
+  txHash        String?  @db.VarChar(255)
+  ipfsHash      String?  @db.VarChar(255)
+  certificateId String?  @db.VarChar(255)
+  createdAt     DateTime @default(now())
+  student       User     @relation(fields: [studentId], references: [id])
+}
+
+model DiplomaSettings {
+  id                  Int      @id @default(autoincrement())
+  campusRegistrar     String
+  campusAdministrator String
+  updatedAt           DateTime @default(now())
+}

@@ -16,8 +16,6 @@ import {
   getWalletBalance,
 } from "./ethereum";
 
-import { db } from "./db";
-
 export async function registerRoutes(
   httpServer: Server,
   app: Express
@@ -403,8 +401,7 @@ export async function registerRoutes(
 
   // Seed Data
   async function seed() {
-    const { data: users } = await db.from('users').select('*');
-    const userList = users || [];
+    const userList = await storage.getUsers();
     if (userList.length === 0) {
       const adminPass = await hashPassword("admin123");
       const studentPass = await hashPassword("student123");

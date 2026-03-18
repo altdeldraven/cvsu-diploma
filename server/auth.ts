@@ -1,7 +1,6 @@
 import { IStorage } from "./storage";
 import { AppUser, InsertUser } from "@shared/schema";
 import session from "express-session";
-import { db } from "./db";
 import { eq } from "drizzle-orm";
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
